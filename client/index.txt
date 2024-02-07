@@ -1,7 +1,5 @@
 Techx - Make Chat Easy
 
-
-
 #---------- HEADER ----------#
 
 Techx
