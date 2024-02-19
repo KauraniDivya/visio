@@ -7,8 +7,8 @@ output_file = sys.argv[2]
 column_stats_file = sys.argv[3]
 
 # New arguments
-selected_columns = sys.argv[4]  
-selected_rows = sys.argv[5]
+selected_columns = sys.argv[4] if len(sys.argv) > 4 else None
+selected_rows = sys.argv[5] if len(sys.argv) > 5 else None
 
 df = pd.read_csv(data_file)
 

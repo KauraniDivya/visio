@@ -36,22 +36,14 @@
     const [fileName, setFileName] = useState(null);
     const [selectedOperation, setSelectedOperation] = useState(null);
     const [updatedFileData, setUpdatedFileData] = useState(null); // Define state variable to store updated file data
-    const [showParameterForm, setShowParameterForm] = useState(false);
-    const [parameters, setParameters] = useState({
-      // Define initial parameter values here
-      columnNames: '',
-      startRow: '',
-      endRow: ''
-    });
+
 
     const handleOperationSelect = (operation) => {
       setSelectedOperation(operation);
       if (operation.type === 'tabular') {
         // Show parameter form only for tabular files
-        setShowParameterForm(true);
       } else {
         // Hide parameter form for other file types
-        setShowParameterForm(false);
       }
       
       console.log("Selected Operation",{
@@ -62,20 +54,7 @@
           // selectedOperation: operation"
       });
     };
-    
-    const handleSubmitParameters = () => {
-      // Process parameter values here (e.g., send to server)
-      console.log('Submitted parameters:', parameters);
-      // Close parameter form after submission
-      setShowParameterForm(false);
-    };
-    const handleParameterChange = (e) => {
-      const { name, value } = e.target;
-      setParameters(prevState => ({
-        ...prevState,
-        [name]: value
-      }));
-    };
+
     const handleFileChange = (event) => {
       const file = event.target.files[0];
       if (file) {
@@ -101,8 +80,9 @@ const handleContinueClick = () => {
     fileName: fileName,
     fileType: fileType,
     filePreview: filePreview,
-    operation: selectedOperation.title // Send only the title of the selected operation
+    operation: selectedOperation.title, // Send only the title of the selected operation
   };
+  
 
   fetch('/upload-file-operation', {
     method: 'POST',
@@ -136,42 +116,7 @@ const handleContinueClick = () => {
 
     return (
       <>
-      {showParameterForm && selectedOperation && (
-        <div>
-          <h2>Parameter Form</h2>
-          <form onSubmit={handleSubmitParameters}>
-            {/* Render parameter input fields */}
-            <label>
-              Column Names (comma-separated):
-              <input
-                type="text"
-                name="columnNames"
-                value={parameters.columnNames}
-                onChange={handleParameterChange}
-              />
-            </label>
-            <label>
-              Start Row:
-              <input
-                type="text"
-                name="startRow"
-                value={parameters.startRow}
-                onChange={handleParameterChange}
-              />
-            </label>
-            <label>
-              End Row:
-              <input
-                type="text"
-                name="endRow"
-                value={parameters.endRow}
-                onChange={handleParameterChange}
-              />
-            </label>
-            <button type="submit">Submit</button>
-          </form>
-        </div>
-      )}
+    
     
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f5f5f5' }}>
         <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 0 10px rgba(0,0,0,0.1)', width: '800px' }}>
