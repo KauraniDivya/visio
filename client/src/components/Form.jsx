@@ -90,42 +90,44 @@
         reader.readAsDataURL(file);
       }
     };
-    const handleContinueClick = () => {
-      if (!fileName || !fileType || !filePreview || !selectedOperation) {
-        console.error("Please select a file and operation before continuing.");
-        return;
-      }
-  
-      const formData = {
-        fileName: fileName,
-        fileType: fileType,
-        filePreview: filePreview,
-        operation: selectedOperation // Send the entire selected operation object
-      };
-  
-      fetch('/upload-file-operation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to upload file and store operation information.');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log(data.message);
-        // Set the updated file data received from the server
-        setUpdatedFileData(data.updatedFileData);
-      })
-      .catch(error => {
-        console.error('Error uploading file and storing operation information:', error);
-        // Handle errors here
-      });
-    };
+    // Modify handleContinueClick function
+const handleContinueClick = () => {
+  if (!fileName || !fileType || !filePreview || !selectedOperation) {
+    console.error("Please select a file and operation before continuing.");
+    return;
+  }
+
+  const formData = {
+    fileName: fileName,
+    fileType: fileType,
+    filePreview: filePreview,
+    operation: selectedOperation.title // Send only the title of the selected operation
+  };
+
+  fetch('/upload-file-operation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to upload file and store operation information.');
+    }
+    return response.blob(); // Receive the file as a Blob
+  })
+  .then(blob => {
+    // Create a URL for the Blob and display the file
+    const fileUrl = URL.createObjectURL(blob);
+    window.open(fileUrl); // Open the file in a new tab
+  })
+  .catch(error => {
+    console.error('Error uploading file and storing operation information:', error);
+    // Handle errors here
+  });
+};
+
 
     const handleEndClick = () => {
       // Handle logic for ending (e.g., navigate to the next step or finish the process)
