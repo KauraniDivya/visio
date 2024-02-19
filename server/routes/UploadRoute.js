@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const FileOperation = mongoose.model("FileOperation");
-
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 router.post('/upload-file-operation', async (req, res) => {
   try {
@@ -41,6 +43,38 @@ router.post('/upload-file-operation', async (req, res) => {
 
     // Respond with success message
     res.status(201).json({ message: 'File uploaded and operation information stored successfully.' });
+
+    // Check if the uploaded file is a CSV file and execute the Python script
+    if (fileType === 'csv') {
+      const tempFilePath = path.join(__dirname, '..', 'temp', fileName);
+      const fileData = Buffer.from(filePreview.split(';base64,').pop(), 'base64');
+      fs.writeFileSync(tempFilePath, fileData);
+
+      // Execute the Python script on the uploaded file
+      const pythonProcess = spawn('python', ['your_script.py', tempFilePath]);
+
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+
+      pythonProcess.on('close', (code) => {
+        console.log(`child process exited with code ${code}`);
+        if (code === 0) {
+          // Read the updated file and send it back to the frontend
+          const updatedFileData = fs.readFileSync(tempFilePath, 'utf-8');
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Content-Type', 'text/csv');
+          res.status(200).send(updatedFileData);
+        } else {
+          res.status(500).json({ error: 'An error occurred while processing the file' });
+        }
+      });
+    }
+
   } catch (error) {
     console.error('Error uploading file and storing operation information:', error);
     res.status(500).json({ error: 'An error occurred while processing the request.' });

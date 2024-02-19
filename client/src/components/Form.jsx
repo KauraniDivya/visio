@@ -35,11 +35,47 @@
     const [filePreview, setFilePreview] = useState(null);
     const [fileName, setFileName] = useState(null);
     const [selectedOperation, setSelectedOperation] = useState(null);
+    const [updatedFileData, setUpdatedFileData] = useState(null); // Define state variable to store updated file data
+    const [showParameterForm, setShowParameterForm] = useState(false);
+    const [parameters, setParameters] = useState({
+      // Define initial parameter values here
+      columnNames: '',
+      startRow: '',
+      endRow: ''
+    });
 
     const handleOperationSelect = (operation) => {
       setSelectedOperation(operation);
+      if (operation.type === 'tabular') {
+        // Show parameter form only for tabular files
+        setShowParameterForm(true);
+      } else {
+        // Hide parameter form for other file types
+        setShowParameterForm(false);
+      }
+      
+      console.log("Selected Operation",{
+        
+          fileName,
+          fileType,
+          filePreview,
+          // selectedOperation: operation"
+      });
     };
-
+    
+    const handleSubmitParameters = () => {
+      // Process parameter values here (e.g., send to server)
+      console.log('Submitted parameters:', parameters);
+      // Close parameter form after submission
+      setShowParameterForm(false);
+    };
+    const handleParameterChange = (e) => {
+      const { name, value } = e.target;
+      setParameters(prevState => ({
+        ...prevState,
+        [name]: value
+      }));
+    };
     const handleFileChange = (event) => {
       const file = event.target.files[0];
       if (file) {
@@ -56,19 +92,17 @@
     };
     const handleContinueClick = () => {
       if (!fileName || !fileType || !filePreview || !selectedOperation) {
-        // You may want to handle this case, perhaps by displaying an error message to the user
         console.error("Please select a file and operation before continuing.");
         return;
       }
-    
-      // Prepare the data to send in the request body
+  
       const formData = {
         fileName: fileName,
         fileType: fileType,
         filePreview: filePreview,
-        operation: selectedOperation.title // Send the title of the selected operation
+        operation: selectedOperation // Send the entire selected operation object
       };
-    
+  
       fetch('/upload-file-operation', {
         method: 'POST',
         headers: {
@@ -83,15 +117,15 @@
         return response.json();
       })
       .then(data => {
-        console.log(data.message); // Log success message received from the server
-        // You can perform additional actions here if needed
+        console.log(data.message);
+        // Set the updated file data received from the server
+        setUpdatedFileData(data.updatedFileData);
       })
       .catch(error => {
         console.error('Error uploading file and storing operation information:', error);
-        // Handle errors here, such as displaying an error message to the user
+        // Handle errors here
       });
     };
-    
 
     const handleEndClick = () => {
       // Handle logic for ending (e.g., navigate to the next step or finish the process)
@@ -100,6 +134,43 @@
 
     return (
       <>
+      {showParameterForm && selectedOperation && (
+        <div>
+          <h2>Parameter Form</h2>
+          <form onSubmit={handleSubmitParameters}>
+            {/* Render parameter input fields */}
+            <label>
+              Column Names (comma-separated):
+              <input
+                type="text"
+                name="columnNames"
+                value={parameters.columnNames}
+                onChange={handleParameterChange}
+              />
+            </label>
+            <label>
+              Start Row:
+              <input
+                type="text"
+                name="startRow"
+                value={parameters.startRow}
+                onChange={handleParameterChange}
+              />
+            </label>
+            <label>
+              End Row:
+              <input
+                type="text"
+                name="endRow"
+                value={parameters.endRow}
+                onChange={handleParameterChange}
+              />
+            </label>
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+      )}
+    
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f5f5f5' }}>
         <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 0 10px rgba(0,0,0,0.1)', width: '800px' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '20px' }}>File Upload</h2>
