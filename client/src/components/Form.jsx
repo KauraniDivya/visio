@@ -2,6 +2,7 @@
 
   import React, { useState } from 'react';
 
+
   const StyledForm = () => {
       const operations = [
           { type: 'text', title: 'Sentiment Analysis', description: 'Determine the overall sentiment (positive, negative, neutral) of text content.' },
@@ -70,44 +71,75 @@
       }
     };
     // Modify handleContinueClick function
-const handleContinueClick = () => {
-  if (!fileName || !fileType || !filePreview || !selectedOperation) {
-    console.error("Please select a file and operation before continuing.");
-    return;
-  }
+    const handleContinueClick = async () => {
+      if (!fileName || !fileType || !filePreview || !selectedOperation) {
+        console.error("Please select a file and operation before continuing.");
+        return;
+      }
+    
+      const formData = {
+        fileName: fileName,
+        fileType: fileType,
+        filePreview: filePreview,
+        operation: selectedOperation.title, // Send only the title of the selected operation
+      };
+      
+      try {
+        const response = await fetch('/upload-file-operation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to upload file and store operation information.');
+        }
+    
+        // Parse response JSON to get the download URL
+        const data = await response.json();
+        const { downloadURL } = data;
+    
+        // Send the download URL to the server for further processing
+        await fetch('/process-download-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ downloadURL })
+        });
+    
+        // Handle the download URL as needed (e.g., display it to the user)
+        console.log('Download URL:', downloadURL);
+      } catch (error) {
+        console.error('Error uploading file and storing operation information:', error);
+        // Handle errors here
+      }
+    };
+    
+// After receiving the download URL
+const handleDownloadURL = async (downloadURL) => {
+  try {
+    const response = await fetch('/process-download-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ downloadURL })
+    });
 
-  const formData = {
-    fileName: fileName,
-    fileType: fileType,
-    filePreview: filePreview,
-    operation: selectedOperation.title, // Send only the title of the selected operation
-  };
-  
-
-  fetch('/upload-file-operation', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(formData)
-  })
-  .then(response => {
     if (!response.ok) {
-      throw new Error('Failed to upload file and store operation information.');
+      throw new Error('Failed to process download URL on the server.');
     }
-    return response.blob(); // Receive the file as a Blob
-  })
-  .then(blob => {
-    // Create a URL for the Blob and display the file
-    const fileUrl = URL.createObjectURL(blob);
-    window.open(fileUrl); // Open the file in a new tab
-  })
-  .catch(error => {
-    console.error('Error uploading file and storing operation information:', error);
-    // Handle errors here
-  });
-};
 
+    // Handle success response from the server
+    console.log('Download URL processed successfully on the server.');
+  } catch (error) {
+    console.error('Error processing download URL on the server:', error);
+    // Handle error
+  }
+};
 
     const handleEndClick = () => {
       // Handle logic for ending (e.g., navigate to the next step or finish the process)
